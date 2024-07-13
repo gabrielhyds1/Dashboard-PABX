@@ -48,7 +48,7 @@ $end_month = date('Y-m-d',$end_month_ts);
     <meta charset="UTF-8">
     <meta charset="character_set">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" name="viewport">
-    <title>RelatÛrios</title>
+    <title>Relat√≥rios</title>
 
     <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/modules/ionicons/css/ionicons.min.css">
@@ -268,18 +268,18 @@ urchinTracker();
                     </div>
                     <ul class="sidebar-menu">
                         <li class="menu-header">Menu</li>
-                        <li class="active">
+                        <li class="">
                             <a href="#" class="has-dropdown"><i class="ion ion-ios-cart"></i><span>Dashboard</span></a>
                             <ul class="menu-dropdown" >
-                                <li><a href="cardapio.php"><i class="ion ion-pizza"></i>Filtros</a></li>
-                                <li class="active"><a href="listarCad.php"><i class="ion ion-ios-eye"></i>Consultar Relatorio</a></li>
+                                <li><a href="cardapio.php"><i class="ion ion-pizza"></i><span>Filtros</span></a></li>
+                                <li class="active"><a href="listarCad.php"><i class="ion ion-ios-eye"></i><span>Consultar Relatorio</span></a></li>
                             </ul>
                         </li>
                         <li>
                             <a href="#" class="has-dropdown"><i class="ion ion-medkit"></i><span>Mudar</span></a>
                             <ul class="menu-dropdown">
-                                <li><a href="inserir.php" class="active"><i class="ion ion-bag"></i>Mudar</a></li>
-                                <li><a href="listarGastos.php"><i class="ion ion-ios-eye"></i>Mudar</a></li>
+                                <li><a href="inserir.php" class="active"><i class="ion ion-bag"></i><span>Mudar</span></a></li>
+                                <li><a href="listarGastos.php"><i class="ion ion-ios-eye"></i><span>Mudar</span></a></li>
                             </ul>
                         </li>
                         <li>
@@ -389,11 +389,11 @@ urchinTracker();
                                     <table class="table table-striped">
                                         <tr>
                                         <th>Nome</th>
-                                        <th>DescriÁ„o</th>
+                                        <th>Descri√ß√£o</th>
                                         <th>Imagem</th>
-                                        <th>PreÁo</th>
+                                        <th>Pre√ßo</th>
                                         <th>Categoria</th>
-                                        <th>AÁ„o</th>
+                                        <th>A√ß√£o</th>
                                         </tr>
                                       
                                             <tr>
@@ -433,7 +433,7 @@ urchinTracker();
                                     <table class="table table-striped">
                                         <tr>
                                             <th>Nome</th>
-                                            <th>AÁ„o</th>
+                                            <th>A√ß√£o</th>
                                         </tr>
 
                                        <tr>
@@ -469,7 +469,7 @@ urchinTracker();
             <footer class="main-footer">
                 <div class="footer-left" style="color:black;">
                     COPYRIGHT &copy; 2022
-                    <div class="bullet"></div> Todos os direitos reservados a Gran-Food <div class="bullet"></div> Vers„o 2.0</a>
+                    <div class="bullet"></div> Todos os direitos reservados a Gran-Food <div class="bullet"></div> Vers√£o 2.0</a>
                 </div>
                 <div class="footer-right"></div>
             </footer>
