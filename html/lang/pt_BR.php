@@ -162,6 +162,6 @@ $lang['pt_BR']['calls_waiting_detail'] = "chamadas em espera";
 $lang['pt_BR']['position']             = "Posição";
 $lang['pt_BR']['callerid']             = "ID de chamada";
 $lang['pt_BR']['wait_time']            = "Tempo de espera";
-
+$lang['pt_BR']['report']            = "Relatório";
 
 ?>

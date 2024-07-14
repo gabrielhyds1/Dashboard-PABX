@@ -177,4 +177,5 @@ $lang['en']['calls_waiting_detail'] = "Calls Waiting Detail";
 $lang['en']['position']             = "Position";
 $lang['en']['callerid']             = "Callerid";
 $lang['en']['wait_time']            = "Wait time";
+$lang['pt_BR']['report']            = "report";
 ?>

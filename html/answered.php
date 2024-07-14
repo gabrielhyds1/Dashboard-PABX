@@ -1,45 +1,72 @@
 <?php
-/*
-   Copyright 2007, 2020 NicolÃ¡s GudiÃ±o
-
-   This file is part of Asternic Call Center Stats.
-
-    Asternic Call Center Stats is free software: you can redistribute it 
-    and/or modify it under the terms of the GNU General Public License as 
-    published by the Free Software Foundation, either version 3 of the 
-    License, or (at your option) any later version.
-
-    Asternic Call Center Stats is distributed in the hope that it will be 
-    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Asternic Call Center Stats.  If not, see 
-    <http://www.gnu.org/licenses/>.
-*/
+session_start();
 require_once("config.php");
 include("sesvars.php");
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $_SESSION['start'] = $_POST['start'];
+    $_SESSION['end'] = $_POST['end'];
+    $_SESSION['List_Queue'] = $_POST['List_Queue'];
+    $_SESSION['List_Agent'] = $_POST['List_Agent'];
+}
+
+// Verifica se as variáveis de sessão estão definidas e usa-as
+$start = isset($_SESSION['start']) ? $_SESSION['start'] : null;
+$end = isset($_SESSION['end']) ? $_SESSION['end'] : null;
+$queues = isset($_SESSION['List_Queue']) ? $_SESSION['List_Queue'] : [];
+$agents = isset($_SESSION['List_Agent']) ? $_SESSION['List_Agent'] : [];
+
+// Transform the arrays into comma-separated strings
+$queue = implode(',', array_map(function($q) { return "'$q'"; }, $queues));
+$agent = implode(',', array_map(function($a) { return "'$a'"; }, $agents));
+
 ?>
-<!doctype html>
 
-<html lang="en">
+<!DOCTYPE html>
+<html lang="pt">
 <head>
-  <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta charset="character_set">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" name="viewport">
+    <title>Relatorios	</title>
+    
+    <link rel="stylesheet" href="assets/modules/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/modules/ionicons/css/ionicons.min.css">
+    <link rel="stylesheet" href="assets/modules/fontawesome/web-fonts-with-css/css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="assets/css/demo.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
 
-  <title>Asternic Call Center Stats</title>
-  <meta name="description" content="Asternic Call Center Stats Lite Reports">
-  <meta name="author" content="asternic.net">
+	<script type="text/javascript" src="js/prototype-1.4.0.js"></script>
 
-  <link rel="stylesheet" href="css/basic.css">
-  <link rel="stylesheet" href="css/tab.css">
-  <link rel="stylesheet" href="css/table.css">
-  <link rel="stylesheet" href="css/fixed-all.css">
 
-  <script src="js/sorttable.js"></script>
+
+
+    <script src="js/validmonth.js" type="text/javascript" language="javascript1.2"></script>
+    <script src="js/sorttable.js"></script>
   <script src="js/Chart.min.js"></script>
 
-</head>
+    <style>
+      * label{
+          color:black;
+      }
+      .main-sidebar{
+        color:#33697B;
+        background-color:#33697B;
+      }
+     .navbar, .navbar-bg{
+     	color:#33697B;
+        background-color:#33697B;
+     }
+     i , span {
+        color:#fff;
+     }
+     .navbar.active{
+	color:#33697B;
+        background-color:#33697B;
+     }
+     </style>
 <?php
 
 // This query shows the hangup cause, how many calls an
@@ -53,7 +80,7 @@ $query.= "GROUP BY ev.event ORDER BY ev.event";
 
 $hangup_cause["COMPLETECALLER"]=0;
 $hangup_cause["COMPLETEAGENT"]=0;
-$res = $midb->consulta($query,array($start,$end));
+$res = $midb->consulta($query, array($start, $end));
 while($row=$midb->fetch_row($res)) {
   $hangup_cause["$row[1]"]=$row[0];
   $total_hangup+=$row[0];
@@ -83,7 +110,7 @@ $total_calls2      = Array();
 $total_duration    = 0;
 $total_calls_queue = Array();
 
-$res = $midb->consulta($query,array($start,$end));
+$res = $midb->consulta($query, array($start, $end));
 if($res) {
     while($row=$midb->fetch_row($res)) {
         if($row[3] <> "TRANSFER" && $row[3]<>"CONNECT") {
@@ -146,8 +173,7 @@ $query.= "FROM  queue_stats AS qs, qevent AS ac, qagent as ag, qname As q WHERE 
 $query.= "AND qs.qname = q.qname_id AND ag.agent_id = qs.qagent AND qs.datetime >= '%s' ";
 $query.= "AND qs.datetime <= '%s' AND  q.queue IN ($queue)  AND ag.agent in ($agent) AND  ac.event = 'TRANSFER'";
 
-
-$res = $midb->consulta($query,array($start,$end));
+$res = $midb->consulta($query, array($start, $end));
 if($res) {
     while($row=$midb->fetch_row($res)) {
         $keytra = "$row[0]^$row[1]@$row[2]";
@@ -165,7 +191,7 @@ $query.= "qs.qevent = ac.event_id AND qs.qname = q.qname_id AND qs.datetime >= '
 $query.= "qs.datetime <= '%s' AND  q.queue IN ($queue)  AND ag.agent in ($agent) AND  ac.event IN ('ABANDON', 'EXITWITHTIMEOUT', 'TRANSFER') ";
 $query.= "ORDER BY  ac.event,  qs.info3";
 
-$res = $midb->consulta($query,array($start,$end));
+$res = $midb->consulta($query, array($start, $end));
 
 while($row=$midb->fetch_row($res)) {
 
@@ -206,7 +232,7 @@ $query.= "qagent AS ag, qevent AS ac WHERE qs.qname = q.qname_id AND qs.qagent =
 $query.= "qs.qevent = ac.event_id AND qs.datetime >= '%s' AND qs.datetime <= '%s' AND ";
 $query.= "q.queue IN ($queue) AND ag.agent in ($agent) AND ac.event IN ('COMPLETECALLER', 'COMPLETEAGENT') ORDER BY ag.agent";
 
-$res = $midb->consulta($query,array($start,$end));
+$res = $midb->consulta($query, array($start, $end));
 while($row=$midb->fetch_row($res)) {
     $total_calls2["$row[2]"]++;
     $record["$row[2]"][]=$row[0]."|".$row[1]."|".$row[3]."|".$row[4];
@@ -230,396 +256,421 @@ $cover_pdf.= $lang["$language"]['total'].": ".$total_duration_print." ".$lang["$
 $cover_pdf.= $lang["$language"]['avg_holdtime'].": ".$average_hold." ".$lang["$language"]['secs']."\n";
 
 ?>
+
+</head>
 <body>
-<?php include("menu.php"); ?>
-<div id="main">
-    <div id="contents">
-        <table style="width: 99%; border-collapse: separate; border-spacing: 1px;">
-        <thead>
-        <tr>
-            <td style="width: 50%; vertical-align: top;">
-                <table style='width: 100%; border: 0; border-collapse: collapse; border-spacing: 0;'>
-                <caption><?php echo $lang["$language"]['report_info']?></caption>
-                <tbody>
-                <tr>
-                    <td><?php echo $lang["$language"]['queue']?>:</td>
-                    <td><?php echo $queue?></td>
-                </tr>
-                <tr>
-                       <td><?php echo $lang["$language"]['start']?>:</td>
-                       <td><?php echo $start_parts[0]?></td>
-                </tr>
-                <tr>
-                       <td><?php echo $lang["$language"]['end']?>:</td>
-                       <td><?php echo $end_parts[0]?></td>
-                </tr>
-                <tr>
-                       <td><?php echo $lang["$language"]['period']?>:</td>
-                       <td><?php echo $period?> <?php echo $lang["$language"]['days']?></td>
-                </tr>
-                </tbody>
-                </table>
+    <div id="app">
+        <div class="main-wrapper">
+            <div class="navbar-bg"></div>
+            <nav class="navbar navbar-expand-lg main-navbar">
+                <form class="form-inline mr-auto">
+                    <ul class="navbar-nav mr-3">
+                        <li><a href="#" data-toggle="sidebar" class="nav-link nav-link-lg"><i class="ion ion-navicon-round"></i></a></li>
+                    </ul>
+                </form>
+            </nav>
+            <div class="main-sidebar">
+                <aside id="sidebar-wrapper">
+                    <div class="sidebar-user">
+                        <div class="sidebar">
+                            <img  class="img d-flex align-items-center justify-content-center" src="assets/img/bradial.png" alt="" style="width:200px;height: 40px;margin-top:10px;">
+                        </div>
+                        <div class="sidebar-user-details">
+                            <div class="user-name"></div>
+                        </div>
+                    </div>
+                    <ul class="sidebar-menu">
+                        <li class="menu-header" style="color:#fff;">Menu</li>
+                        <li >
+                            <a href="answered.php"><i class="ion ion-android-call"></i><span>Chamadas Atendidas<span></a>
+                        </li>
+                         <li >
+                            <a href="answered.php"><i class="ion ion"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-7" width="18px" heigth="20px">
+  <path fill-rule="evenodd" d="M15.22 3.22a.75.75 0 0 1 1.06 0L18 4.94l1.72-1.72a.75.75 0 1 1 1.06 1.06L19.06 6l1.72 1.72a.75.75 0 0 1-1.06 1.06L18 7.06l-1.72 1.72a.75.75 0 1 1-1.06-1.06L16.94 6l-1.72-1.72a.75.75 0 0 1 0-1.06ZM1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" />
+</svg>
+</i><span>Chamadas Perdidas<span></a>
+                        </li>
+			<li>
+                            <a href="distribution.php"><i class="ion ion"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-7" width="18px" heigth="20px">
+  <path fill-rule="evenodd" d="M2.25 2.25a.75.75 0 0 0 0 1.5H3v10.5a3 3 0 0 0 3 3h1.21l-1.172 3.513a.75.75 0 0 0 1.424.474l.329-.987h8.418l.33.987a.75.75 0 0 0 1.422-.474l-1.17-3.513H18a3 3 0 0 0 3-3V3.75h.75a.75.75 0 0 0 0-1.5H2.25Zm6.04 16.5.5-1.5h6.42l.5 1.5H8.29Zm7.46-12a.75.75 0 0 0-1.5 0v6a.75.75 0 0 0 1.5 0v-6Zm-3 2.25a.75.75 0 0 0-1.5 0v3.75a.75.75 0 0 0 1.5 0V9Zm-3 2.25a.75.75 0 0 0-1.5 0v1.5a.75.75 0 0 0 1.5 0v-1.5Z" clip-rule="evenodd" />
+</svg>
+</i><span>Estatisticas Diarias</span></a>
+                        </li>
+                        <li >
+                            <a href="realtime.php"><i class="ion ion"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-7" width="18px" heigth="20px">
+  <path d="M21 6.375c0 2.692-4.03 4.875-9 4.875S3 9.067 3 6.375 7.03 1.5 12 1.5s9 2.183 9 4.875Z" />
+  <path d="M12 12.75c2.685 0 5.19-.586 7.078-1.609a8.283 8.283 0 0 0 1.897-1.384c.016.121.025.244.025.368C21 12.817 16.97 15 12 15s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.285 8.285 0 0 0 1.897 1.384C6.809 12.164 9.315 12.75 12 12.75Z" />
+  <path d="M12 16.5c2.685 0 5.19-.586 7.078-1.609a8.282 8.282 0 0 0 1.897-1.384c.016.121.025.244.025.368 0 2.692-4.03 4.875-9 4.875s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.284 8.284 0 0 0 1.897 1.384C6.809 15.914 9.315 16.5 12 16.5Z" />
+  <path d="M12 20.25c2.685 0 5.19-.586 7.078-1.609a8.282 8.282 0 0 0 1.897-1.384c.016.121.025.244.025.368 0 2.692-4.03 4.875-9 4.875s-9-2.183-9-4.875c0-.124.009-.247.025-.368a8.284 8.284 0 0 0 1.897 1.384C6.809 19.664 9.315 20.25 12 20.25Z" />
+</svg>
+</i><span>Dados em tempo real<span></a>
+                        </li>
+			<li >
+                            <a href="index.php"><i class="ion ion-android-arrow-back"></i><span>Voltar<span></a>
+                        </li>
 
-            </td>
-            <td style="width: 50%; vertical-align: top;">
-                <table style='width: 100%; border: 0; border-collapse: collapse; border-spacing: 0;'>
-                <caption><?php echo $lang["$language"]['answered_calls']?></caption>
-                <tbody>
-                <tr> 
-                  <td><?php echo $lang["$language"]['answered_calls']?></td>
-                  <td><?php echo $total_calls?> <?php echo $lang["$language"]['calls']?></td>
-                </tr>
-                <tr> 
-                  <td><?php echo $lang["$language"]['transferred_calls']?></td>
-                  <td><?php echo $transferidas?> <?php echo $lang["$language"]['calls']?></td>
-                </tr>
-                <tr>
-                  <td><?php echo $lang["$language"]['avg_calltime']?>:</td>
-                  <td><?php echo $average_duration?> <?php echo $lang["$language"]['secs']?></td>
-                </tr>
-                <tr>
-                  <td><?php echo $lang["$language"]['total']?> <?php echo $lang["$language"]['calltime']?>:</td>
-                  <td><?php echo $total_duration_print?> <?php echo $lang["$language"]['minutes']?></td>
-                </tr>
-                <tr>
-                  <td><?php echo $lang["$language"]['avg_holdtime']?>:</td>
-                  <td><?php echo $average_hold?> <?php echo $lang["$language"]['secs']?></td>
-                </tr>
-                </tbody>
-              </table>
-            </td>
-        </tr>
-        </thead>
-        </table>
-        <br/>    
-        <a id='1'></a>
-        <table style="width: 99%; border-collapse: separate; border-spacing: 1px;" class='sortable' id='table1' >
-        <caption>
-        <a href='#0'><img alt='go up' src='images/go-up.png' class='icon' width=16 height=16 
-        <?php 
-        tooltip($lang["$language"]['gotop'],200);
-        ?> 
-        ></a>&nbsp;&nbsp;
-        <?php echo $lang["$language"]['answered_calls_by_agent']?>
-        </caption>
-            <thead>
-            <tr>
-                  <th><?php echo $lang["$language"]['agent']?></th>
-                  <th><?php echo $lang["$language"]['Calls']?></th>
-                  <th><?php echo $lang["$language"]['percent']?> <?php echo $lang["$language"]['Calls']?></th>
-                  <th><?php echo $lang["$language"]['calltime']?></th>
-                  <th><?php echo $lang["$language"]['percent']?> <?php echo $lang["$language"]['calltime']?></th>
-                  <th><?php echo $lang["$language"]['avg']?> <?php echo $lang["$language"]['calltime']?></th>
-                  <th><?php echo $lang["$language"]['holdtime']?></th>
-                  <th><?php echo $lang["$language"]['avg']?> <?php echo $lang["$language"]['holdtime']?></th>
-            </tr>
-            </thead>
-            <tbody>
-                <?php
-                $header_pdf=array($lang["$language"]['agent'],$lang["$language"]['Calls'],$lang["$language"]['percent'],$lang["$language"]['calltime'],$lang["$language"]['percent'],$lang["$language"]['avg'],$lang["$language"]['holdtime'],$lang["$language"]['avg']);
-                $width_pdf=array(25,23,23,23,23,25,25,20);
-                $title_pdf=$lang["$language"]['answered_calls_by_agent'];
+            </aside>
+            </div>
+            <div class="main-content">
+                <section class="section">
+                  <h1 class="section-header">
+                        <div>Chamadas Atendidas</div>
+                  </h1>
+                  <div>
+           </div>
+            
+            <div class="row mt-4">
+              <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-sm-4">
+                  <div class="card-icon bg-primary">
+                    <i class="icon ion-android-call"></i>
+                  </div>
+                  <div class="card-wrap">
+                    <div class="card-header">
+                      <h4>Atendidas</h4>
+                    </div>
+                    <div class="card-body">
+                    <?php echo $total_calls; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                $contador=0;
-                $query1 = "";
-                $query2 = "";
-                $data_pdf = array();
-                if($total_calls2>0) {
-                foreach($total_calls2 as $agent=>$val) {
-                    $contavar = $contador +1;
-                    $cual = $contador % 2;
-                    if($cual>0) { $odd = " class='odd' "; } else { $odd = ""; }
-                    $query1 .= "val$contavar=".$total_time2["$agent"]."&var$contavar=$agent&";
-                    $query2 .= "val$contavar=".$val."&var$contavar=$agent&";
+              <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-sm-4">
+                  <div class="card-icon bg-warning">
+                    <i class="icon ion-ios-fastforward-outline"></i>
+                  </div>
+                  <div class="card-wrap">
+                    <div class="card-header">
+                      <h4>Transferidas</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php echo $transferidas; ?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card card-sm-4">
+                  <div class="card-icon bg-success">
+                    <i class="icon ion-android-calendar"></i>
+                  </div>
+                  <div class="card-wrap">
+                    <div class="card-header">
+                      <h4>Periodo</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php echo $period." ".$lang["$language"]['days']?>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    $time_print = seconds2minutes($total_time2["$agent"]);
-                    $avg_time = $total_time2["$agent"] / $val;
-                    $avg_time = round($avg_time,2);
+            <div class="row mt-12">
+    <div class="col-12 col-sm-12 col-lg-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Seleciona o tipo para listar</h4>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-pills" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="home-tab3" data-toggle="tab" href="#home3" role="tab" aria-controls="home" aria-selected="true">Chamadas atendidas por agentes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="profile-tab2" data-toggle="tab" href="#profile2" role="tab" aria-controls="profile" aria-selected="false">Nivel de Servico</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="profile-tab3" data-toggle="tab" href="#profile3" role="tab" aria-controls="profile" aria-selected="false">Chamadas atendidas por fila</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="profile-tab4" data-toggle="tab" href="#profile4" role="tab" aria-controls="profile" aria-selected="false">Causa da desconecxao</a>
+                    </li>
+                </ul>
+                <div class="tab-content" id="myTabContent">
 
-                    $avg_print = seconds2minutes($avg_time);
+                    <!-- LISTAR CHAMADAS POR AGENTES -->
+                    <div class="tab-pane fade show active" id="home3" role="tabpanel" aria-labelledby="home-tab3">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4>Acompanhe as metricas da sua equipe.</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <tr>
+                                                    <th>Agente</th>
+                                                    <th>Chamadas</th>
+                                                    <th>Tempo Total</th>
+                                                    <th>Tempo Médio</th>
+                                                </tr>
+                                                <?php
+                                                $countrow = 0;
+                                                $partial_total = 0;
+                                                $query1 = "";
+                                                $query2 = "";
+                                                $data_pdf = array();
+                                                if ($total_calls2 > 0) {
+                                                    foreach ($total_calls2 as $agent => $val) {
+                                                        $contavar = $countrow + 1;
+                                                        $query1 .= "val$contavar=" . $total_time2["$agent"] . "&var$contavar=$agent&";
+                                                        $query2 .= "val$contavar=" . $val . "&var$contavar=$agent&";
+                                                        $time_print = seconds2minutes($total_time2["$agent"]);
+                                                        $avg_time = $total_time2["$agent"] / $val;
+                                                        $avg_time = round($avg_time, 2);
+                                                        $avg_print = seconds2minutes($avg_time);
+                                                        echo "<tr>";
+                                                        echo "<td>$agent</td>";
+                                                        echo "<td>$val</td>";
+                                                        echo "<td>$time_print</td>";
+                                                        echo "<td>$avg_print</td>";
+                                                        echo "</tr>";
+                                                        $linea_pdf = array($agent, $val, $total_time2["$agent"], $avg_time);
+                                                        $data_pdf[] = $linea_pdf;
+                                                        $countrow++;
+                                                    }
+                                                    $query1 .= "title=" . $lang["$language"]['total_time_agent'];
+                                                    $query2 .= "title=" . $lang["$language"]['no_calls_agent'];
+                                                }
+                                                ?>
+                                            </table>
+                                            <?php 
+                                            if($total_calls2>0) {
+                                                print_exports($header_pdf, $data_pdf, $width_pdf, $title_pdf, $cover_pdf);
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>      
+                    </div>
 
-                    echo "<tr $odd>\n";
-                    echo "<td>$agent</td>\n";
-                    echo "<td>$val</td>\n";
-                    if($grandtotal_calls > 0) {
-                       $percentage_calls = $val * 100 / $grandtotal_calls;
-                    } else {
-                       $percentage_calls = 0;
-                    }
-                    $percentage_calls = number_format($percentage_calls,2);
-                    echo "<td>$percentage_calls ".$lang["$language"]['percent']."</td>\n";
-                    echo "<td>$time_print ".$lang["$language"]['minutes']."</td>\n";
-                    if($grandtotal_time > 0) {
-                       $percentage_time = $total_time2["$agent"] * 100 / $grandtotal_time;
-                    } else {
-                       $percentage_time = 0;
-                    }
-                    $percentage_time = number_format($percentage_time,2);
-                    echo "<td>$percentage_time ".$lang["$language"]['percent']."</td>\n";
-                    //echo "<td>$avg_time ".$lang["$language"]['secs']."</td>\n";
-                    echo "<td>$avg_print ".$lang["$language"]['minutes']."</td>\n";
-                    echo "<td>".$total_hold2["$agent"]." ".$lang["$language"]['secs']."</td>\n";
-                    $avg_hold = $total_hold2["$agent"] / $val;
-                    $avg_hold = number_format($avg_hold,2);
-                    echo "<td>$avg_hold ".$lang["$language"]['secs']."</td>\n";
-                    echo "</tr>\n";
+                    <!-- NÍVEL DE SERVIÇO -->
+                    <div class="tab-pane fade" id="profile2" role="tabpanel" aria-labelledby="profile-tab2">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4>Nivel de Servico</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr> 
+                                                        <th><?php echo $lang["$language"]['answer']?></th>
+                                                        <th><?php echo $lang["$language"]['count']?></th>
+                                                        <th><?php echo $lang["$language"]['delta']?></th>
+                                                        <th><?php echo $lang["$language"]['percent']?></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php
+                                                    $countrow = 0;
+                                                    $partial_total = 0;
+                                                    $query2 = "";
+                                                    $total_y_transfer = $answer['15'] + $answer['30'] + $answer['45'] + $answer['60'] + $answer['75'] + $answer['90'] + $answer['91+'];
 
-                    $linea_pdf = array($agent,$val,"$percentage_calls ".$lang["$language"]['percent'],$total_time2["$agent"],"$percentage_time ".$lang["$language"]['percent'],"$avg_time ".$lang["$language"]['secs'],$total_hold2["$agent"]." ".$lang["$language"]['secs'], "$avg_hold ".$lang["$language"]['secs']);
-                       $data_pdf[]=$linea_pdf;
-                    $contador++;
-                }
-                
-                $query1.="title=".$lang["$language"]['total_time_agent'];
-                $query2.="title=".$lang["$language"]['no_calls_agent'];
-                }
-                ?>
-            </tbody>
-        </table>
-            <?php if($total_calls2>0) {
-                print_exports($header_pdf,$data_pdf,$width_pdf,$title_pdf,$cover_pdf);
-                }
-            ?>
+                                                    foreach ($answer as $key => $val) {
+                                                        $newcont = $countrow + 1;
+                                                        $query2 .= "val$newcont=$val&var$newcont=$key%20" . $lang["$language"]['secs'] . "&";
+                                                        $cual = ($countrow % 2);
+                                                        if ($cual > 0) {
+                                                            $odd = " class='odd' ";
+                                                        } else {
+                                                            $odd = "";
+                                                        }
+                                                        echo "<tr $odd>\n";
+                                                        echo "<td>" . $lang["$language"]['within'] . "$key " . $lang["$language"]['secs'] . "</td>\n";
+                                                        $delta = $val;
+                                                        if ($delta > 0) {
+                                                            $delta = "+" . $delta;
+                                                        }
+                                                        $partial_total += $val;
+                                                        if ($total_y_transfer > 0) {
+                                                            $percent = $partial_total * 100 / $total_y_transfer;
+                                                        } else {
+                                                            $percent = 0;
+                                                        }
+                                                        $percent = number_format($percent, 2);
+                                                        if ($countrow == 0) {
+                                                            $delta = "";
+                                                        }
+                                                        echo "<td>$partial_total " . $lang["$language"]['calls'] . "</td>\n";
+                                                        echo "<td>$delta</td>\n";
+                                                        echo "<td>$percent " . $lang["$language"]['percent'] . "</td>\n";
+                                                        echo "</tr>\n";
+                                                        $countrow++;
+                                                    }
+                                                    $query2 .= "title=" . $lang["$language"]['call_response'];
+                                                    ?>
+                                                </tbody>
+                                            </table>
+                                            <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
+                                                <?php
+                                                swf_bar($query2, 364, 220, "chart3", 0);
+                                                ?>
+                                            </td>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <br/>    
-            <?php
-            if($total_calls2>0) {
-                echo "<table style='width: 99%; border-collapse: separate; border-spacing: 1px;'>\n";
-                echo "<thead>\n";
-                echo "<tr><td style='text-align:center; background-color: #fffdf3; width: 100%;'>\n";
-                swf_bar($query1,364,220,"chart1",0);
-                echo "</td><td style='text-align:center; background-color: #fffdf3; width: 100%;'>\n";
-                swf_bar($query2,364,220,"chart2",0);
-                echo "</td></tr>\n";
-                echo "</thead>\n";
-                echo "</table><br/>\n";
-            }
-            ?>
-
-            <a id='2'></a>
-            <table style='width: 99%; border-collapse: separate; border-spacing: 1px;'>
-            <caption>
-            <a href='#0'><img alt='go up' src='images/go-up.png' class='icon' width=16 height=16 
-            <?php 
-            tooltip($lang["$language"]['gotop'],200);
-            ?>
-            ></a>&nbsp;&nbsp;
-            <?php echo $lang["$language"]['call_response']?></caption>
-            <thead>
-            <tr>
-            <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
-                <table style="width: 99%; border-collapse: separate; border-spacing: 1px;" class='sortable' id='table2' >
-                <thead>
-                <tr> 
-                  <th><?php echo $lang["$language"]['answer']?></th>
-                  <th><?php echo $lang["$language"]['count']?></th>
-                  <th><?php echo $lang["$language"]['delta']?></th>
-                  <th><?php echo $lang["$language"]['percent']?></th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php
-                $countrow=0;
-                $partial_total = 0;
-                $query2="";
-                $total_y_transfer = $answer['15'] + $answer['30'] +  $answer['45'] + $answer['60'] +  $answer['75'] + $answer['90'] +  $answer['91+'];
-                foreach($answer as $key=>$val)
-                {
-                    $newcont = $countrow+1;
-                    $query2.="val$newcont=$val&var$newcont=$key%20".$lang["$language"]['secs']."&";
-                    $cual = ($countrow%2);
-                    if($cual>0) { $odd = " class='odd' "; } else { $odd = ""; }
-                    echo "<tr $odd>\n";
-                    echo "<td>".$lang["$language"]['within']."$key ".$lang["$language"]['secs']."</td>\n";
-                    $delta = $val;
-                    if($delta > 0) { $delta = "+".$delta;}
-                    $partial_total += $val;
-                    if($total_y_transfer > 0) {
-                    $percent=$partial_total*100/$total_y_transfer;
-                    } else {
-                    $percent = 0;
-                    }
-                    $percent=number_format($percent,2);
-                    if($countrow==0) { $delta = ""; }
-                    echo "<td>$partial_total ".$lang["$language"]['calls']."</td>\n";
-                    echo "<td>$delta</td>\n";
-                    echo "<td>$percent ".$lang["$language"]['percent']."</td>\n";
-                    echo "</tr>\n";
-                    $countrow++;
-                }
-                $query2.="title=".$lang["$language"]['call_response'];
-                ?>
-                </tbody>
-              </table>
-              </td>
-                <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
-                <?php
-                swf_bar($query2,364,220,"chart3",0);
-                ?>
-                </td>
-            </tr>
-            </thead>
-          </table>
-          <br/>
-            <a id='3'></a>
-            <table style='width: 99%; border-collapse: separate; border-spacing: 1px;'>
-            <caption>
-            <a href='#0'><img alt='go up' src='images/go-up.png' class='icon' width=16 height=16 
-
-            <?php 
-            tooltip($lang["$language"]['gotop'],200);
-            ?>
-            ></a>&nbsp;&nbsp;
-            <?php echo $lang["$language"]['answered_calls_by_queue']?></caption>
-            <thead>
-            <tr>
-              <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
-                <table style="width: 99%; border-collapse: separate; border-spacing: 1px;" class='sortable' id='table3' >
-                <thead>
-                <tr> 
-                    <th><?php echo $lang["$language"]['queue']?></th>
-                    <th><?php echo $lang["$language"]['count']?></th>
-                    <th><?php echo $lang["$language"]['percent']?></th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php
-                $countrow=0;
-                $query2="";
-                if(count($total_calls_queue)==0) {
-                        $total_calls_queue[""]=0;
-                }
-                asort($total_calls_queue);
-                foreach($total_calls_queue as $key=>$val) {
-                    $cual = $countrow%2;
-                    if($cual>0) { $odd = " class='odd' "; } else { $odd = ""; }
-                    if($total_calls>0) {
-                    $percent = $val * 100 / $total_calls;
-                    } else {
-                    $percent=0;
-                    }
-                    $percent =number_format($percent,2);
-                    echo "<tr $odd><td>$key</td><td>$val ".$lang["$language"]['calls']."</td><td>$percent %</td></tr>\n";
-                    $countrow++;
-                    $query2.="var$countrow=$key&val$countrow=$val&";
-                }
-                $query2.="title=".addslashes($lang[$language]['answered_calls_by_queue']);
-                ?>
-              </tbody>
-              </table>
-            </td>
-            <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
-                <?php 
-                if ($countrow>1) {
-                    swf_bar("$query2",364,220,"chart4",0);
-                   } 
-                ?>
-            </td>
-            </tr>
-            </thead>
-            </table>
-            <br/>
-
-            <a id='4'></a>
-            <table style='width: 99%; border-collapse: separate; border-spacing: 1px;'>
-            <caption>
-            <a href='#0'><img alt='go up' src='images/go-up.png' class='icon' width=16 height=16 
-
-            <?php 
-            tooltip($lang["$language"]['gotop'],200);
-            ?>
-            ></a>&nbsp;&nbsp;
-            <?php echo $lang["$language"]['disconnect_cause']?></caption>
-            <thead>
-            <tr>
-              <td style="width: 50%; vertical-align: top; background-color: #fffdf3;">
-                <table style="width: 99%; border-collapse: separate; border-spacing: 1px;" class='sortable' id='table4' >
-                <thead>
-                <tr>
-                    <th><?php echo $lang["$language"]['cause']?></th>
-                    <th><?php echo $lang["$language"]['count']?></th>
-                    <th><?php echo $lang["$language"]['count']?></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr> 
-                  <td><?php echo $lang["$language"]['agent_hungup']?>:</td>
-                  <td><?php echo $hangup_cause["COMPLETEAGENT"]?> <?php echo $lang["$language"]['calls']?></td>
-                  <td>
-                      <?php
-                        if($total_hangup > 0 ) {
-                            $percent=$hangup_cause["COMPLETEAGENT"]*100/$total_hangup;
-                        } else {
-                            $percent=0;
+                    <!-- CHAMADAS ATENDIDAS POR FILA -->
+                   <div class="tab-pane fade" id="profile3" role="tabpanel" aria-labelledby="profile-tab3">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Chamadas atendidas por fila</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr> 
+                                    <th><?php echo $lang["$language"]['queue']?></th>
+                                    <th><?php echo $lang["$language"]['count']?></th>
+                                    <th><?php echo $lang["$language"]['percent']?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $countrow = 0;
+                                $query2 = "";
+                                if (count($total_calls_queue) == 0) {
+                                    $total_calls_queue[""] = 0;
+                                }
+                                asort($total_calls_queue);
+                                foreach ($total_calls_queue as $key => $val) {
+                                    $cual = $countrow % 2;
+                                    $odd = ($cual > 0) ? " class='odd' " : "";
+                                    $percent = ($total_calls > 0) ? number_format($val * 100 / $total_calls, 2) : 0;
+                                    echo "<tr $odd><td>$key</td><td>$val " . $lang["$language"]['calls'] . "</td><td>$percent %</td></tr>\n";
+                                    $countrow++;
+                                    $query2 .= "var$countrow=$key&val$countrow=$val&";
+                                }
+                                $query2 .= "title=" . addslashes($lang[$language]['answered_calls_by_queue']);
+                                ?>
+                            </tbody>
+                        </table>
+                        <?php 
+                        if ($total_calls_by_queue > 0) {
+                            print_exports($header_pdf, $data_pdf, $width_pdf, $title_pdf, $cover_pdf);
                         }
-                        $percent=number_format($percent,2);
-                        echo $percent;
-                      ?> 
-                   <?php echo $lang["$language"]['percent']?></td>
-                </tr>
-                <tr> 
-                  <td><?php echo $lang["$language"]['caller_hungup']?>:</td>
-                  <td><?php echo $hangup_cause['COMPLETECALLER']?> <?php echo $lang["$language"]['calls']?></td>
-                  <td>
-                      <?php
-                        if($total_hangup > 0 ) {
-                            $percent=$hangup_cause["COMPLETECALLER"]*100/$total_hangup;
-                        } else {
-                            $percent=0;
-                        }
-                        $percent=number_format($percent,2);
-                        echo $percent;
-                      ?> 
-                    <?php echo $lang["$language"]['percent']?></td>
-                </tr>
-                </tbody>
-              </table>
-            </td>
-            <td style='text-align:center; background-color: #fffdf3; width: 100%;'>
-                <?php
-                $query2 = "var1=".$lang["$language"]['agent']."&val1=".$hangup_cause["COMPLETEAGENT"]."&";
-                $query2 .= "var2=".$lang["$language"]['caller']."&val2=".$hangup_cause["COMPLETECALLER"];
-                $query2.="&title=".$lang["$language"]['disconnect_cause'];
-                swf_bar($query2,364,220,"chart5",0);
-                ?>
-            </td>
-            </tr>
-            </thead>
-            </table>
+                        ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+</div>
+<!-- CAUSA DA DESCONEXÃO -->
+<div class="tab-pane fade" id="profile4" role="tabpanel" aria-labelledby="profile-tab4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Causa da Desconexão</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th><?php echo $lang["$language"]['cause']; ?></th>
+                                    <th><?php echo $lang["$language"]['count']; ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr> 
+                                    <td><?php echo $lang["$language"]['agent_hungup']; ?>:</td>
+                                    <td><?php echo $hangup_cause["COMPLETEAGENT"]; ?> <?php echo $lang["$language"]['calls']; ?></td>
+                                </tr>
+                                <tr> 
+                                    <td><?php echo $lang["$language"]['caller_hungup']; ?>:</td>
+                                    <td><?php echo $hangup_cause['COMPLETECALLER']; ?> <?php echo $lang["$language"]['calls']; ?></td>
+                                </tr>
+                                <?php
+                                foreach ($disconnect_causes as $cause => $count) {
+                                    echo "<tr>";
+                                    echo "<td>$cause</td>";
+                                    echo "<td>$count</td>";
+                                    echo "<td>";
+                                    if ($total_hangup > 0) {
+                                        $percent = $count * 100 / $total_hangup;
+                                    } else {
+                                        $percent = 0;
+                                    }
+                                    $percent = number_format($percent, 2);
+                                    echo $percent;
+                                    echo " %</td>";
+                                    echo "</tr>";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>              
+          </div>  
+        </div>
+      </div>
 
-            <br/>
+    </section>
+            </div>
+            <footer class="main-footer">
+                <div class="footer-left" style="color:black;">
+                    COPYRIGHT &copy; 2022
+                    <div class="bullet"></div> Todos os direitos reservados a Gran-Food <div class="bullet"></div> Versão 2.0</a>
+                </div>
+                <div class="footer-right"></div>
+            </footer>
+        </div>
+    </div>
 
-            <?php
-            if($totaltransfers>0) {
-            ?>
-            <table style="width: 99%; border-collapse: separate; border-spacing: 1px;" class='sortable' id='table5' >
-            <caption><?php echo $lang["$language"]['transfers']?></caption>
-            <thead>
-            <tr>
-                 <th><?php echo $lang["$language"]['agent']?></th>
-                 <th><?php echo $lang["$language"]['to']?></th>
-                 <th><?php echo $lang["$language"]['count']?></th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            foreach($transfers as $key=>$val) {
-                $partes = preg_split("/\^/",$key);
-                $agent = $partes[0];
-                $extension = $partes[1];
-                echo "<tr>\n";
-                echo "<td style='padding:0;'>$agent</td>\n";
-                echo "<td style='padding:0;'>$extension</td>\n";
-                echo "<td style='padding:0;'>$val</td>\n";
-                echo "</tr>";
-            }
-            ?>
-            </tbody>
-            </table>
-        <?php } ?>
-</div>
-</div>
-</div>
-<div id='footer'>&copy; Copyright 2007 - <?php echo date('Y');?> by Nicol&aacute;s Gudi&ntilde;o - <a href='http://www.asternic.net'>Asternic Asterisk Tools</a> Licensed under <a href='http://www.opensource.org/licenses/gpl-3.0.html'>GPL3</a></div>
-<script src="js/wz_tooltip.js"></script>
+
+  <script src="assets/modules/jquery.min.js"></script>
+  <script src="assets/modules/popper.js"></script>
+  <script src="assets/modules/tooltip.js"></script>
+  <script src="assets/modules/bootstrap/js/bootstrap.min.js"></script>
+  <script src="assets/modules/nicescroll/jquery.nicescroll.min.js"></script>
+  <script src="assets/modules/scroll-up-bar/dist/scroll-up-bar.min.js"></script>
+  <script src="assets/js/sa-functions.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+  <script src="http://maps.google.com/maps/api/js?key=YOUR_API_KEY&amp;sensor=true"></script>
+  <script src="assets/modules/gmaps.js"></script>
+  <script src="../Modal/sweetalert2.min.js"></script>
+  <script>
+    // init map
+    var simple_map = new GMaps({
+      div: '#simple-map',
+      lat: -6.5637928,
+      lng: 106.7535061
+    })
+  </script>
+  <script src="assets/js/scripts.js"></script>
+  <script src="assets/js/custom.js"></script>
+  
+  <script src="assets/js/cepFunc.js"></script>
+  <script src="assets/js/modal.js"></script>
+
 </body>
+
 </html>

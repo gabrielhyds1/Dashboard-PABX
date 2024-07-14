@@ -1,6 +1,6 @@
 <?php
 /*
-   Copyright 2007, 2020 NicolÃ¡s GudiÃ±o
+   Copyright 2007, 2020 Nicolás Gudiño
 
    This file is part of Asternic Call Center Stats.
 
@@ -94,8 +94,8 @@ $elapsed_seconds = $timestamp_end - $timestamp_start;
 $period          = floor(($elapsed_seconds / 60) / 60 / 24) + 1; 
 
 if(!isset($_SESSION['QSTATS']['start'])) {
-	if(basename($self)<>"realtime.php") {
-		Header("Location: ./realtime.php");
+	if(basename($self)<>"index.php") {
+		Header("Location: ./index.php");
 	}
 }
 
